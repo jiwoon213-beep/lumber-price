@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>이번 주 목재 시세 — 영진종합목재</title>
+<title>이번 주 목재 시세 — 월드건축자재</title>
 <meta name="description" content="대전·세종 목재 시세. 구조목, 각재, 합판, 자작합판, OSB, 방부목, 석고보드 이번 주 가격. 재단·배송 가능.">
-<meta property="og:title" content="이번 주 목재 시세 — 영진종합목재">
+<meta property="og:title" content="이번 주 목재 시세 — 월드건축자재">
 <meta property="og:description" content="구조목·합판·각재·OSB 이번 주 가격 · 재단·배송 가능">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
@@ -48,7 +48,7 @@ textarea{width:100%;height:150px;margin-top:10px;font:inherit;font-size:13px;bor
 </head>
 <body>
 <header>
-  <div class="shop" id="shopName">영진종합목재</div>
+  <div class="shop" id="shopName">월드건축자재</div>
   <h1>이번 주 목재 시세</h1>
   <span class="date" id="date">불러오는 중…</span>
 </header>
@@ -121,6 +121,7 @@ function render(){
   let cta="";
   if(S.phone) cta+=`<a href="tel:${esc(S.phone.replace(/[^0-9+]/g,""))}">📞 전화 주문·문의</a>`;
   if(S.kakao) cta+=`<a class="kakao" href="${esc(S.kakao)}" target="_blank" rel="noopener">💬 카톡 견적</a>`;
+  if(S.home) cta+=`<a href="${esc(S.home)}">🛒 홈페이지 전체 상품</a>`;
   $("#cta").innerHTML=cta;
   $("#txt").value=postText(upd);
 }
@@ -161,7 +162,7 @@ async function saveImg(){
   const by=y+rows.length*rowH+70;
   g.fillStyle="#8a5a2b";g.font=F(700,32);g.fillText((S.notes||[]).join("  ·  "),70,Math.min(by,H-110));
   g.fillStyle="#7a7266";g.font=F(400,24);g.fillText("VAT 포함 · 재고·수량·배송 거리에 따라 달라질 수 있습니다"+(S.phone?"   📞 "+S.phone:""),70,H-55);
-  const a=document.createElement("a"); a.download=`영진목재_시세_${(D.updated||"").replace(/-/g,"")}.png`; a.href=c.toDataURL("image/png"); a.click();
+  const a=document.createElement("a"); a.download=`월드건축자재_시세_${(D.updated||"").replace(/-/g,"")}.png`; a.href=c.toDataURL("image/png"); a.click();
   toast("이미지를 저장했습니다");
 }
 

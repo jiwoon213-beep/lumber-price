@@ -187,7 +187,7 @@ function renderAll(){
   const so=$("#asort").value; rows.sort(so==="low"?(a,b)=>a.inc-b.inc:so==="high"?(a,b)=>b.inc-a.inc:(a,b)=>a.n.localeCompare(b.n,"ko")||a.inc-b.inc);
   $("#acount").textContent=`${shopsIn.length}개 쇼핑몰 ${C.length}개 상품, 지금 ${rows.length}개 표시`;
   $("#allTbl").innerHTML=`<thead><tr><th>상품</th><th style="text-align:left">규격</th><th>가격(VAT포함)</th><th>표시가</th><th style="text-align:left">쇼핑몰</th></tr></thead><tbody>`+
-    rows.slice(0,8000).map(c=>`<tr><td style="white-space:normal;min-width:180px">${esc(c.n)}</td><td style="text-align:left" class="muted">${esc(c.sp)}</td><td><b>${won(c.inc)}</b></td><td class="muted">${won(c.v)}${c.vat?" 별도":""}</td><td style="text-align:left">${esc((shop(c.s)||{}).name)}</td></tr>`).join("")+
+    rows.slice(0,12000).map(c=>`<tr><td style="white-space:normal;min-width:180px">${esc(c.n)}</td><td style="text-align:left" class="muted">${esc(c.sp)}</td><td><b>${won(c.inc)}</b></td><td class="muted">${won(c.v)}${c.vat?" 별도":""}</td><td style="text-align:left">${esc((shop(c.s)||{}).name)}</td></tr>`).join("")+
     (rows.length?"":`<tr><td colspan="5" class="muted" style="padding:18px">검색 결과가 없습니다.</td></tr>`)+"</tbody>";
 }
 ["#aq"].forEach(s=>$(s).addEventListener("input",renderAll)); ["#ashop","#asort"].forEach(s=>$(s).addEventListener("change",renderAll));

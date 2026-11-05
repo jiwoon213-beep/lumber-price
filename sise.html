@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>이번 주 목재 시세 — 영진종합목재</title>
+<meta name="description" content="대전·세종 목재 시세. 구조목, 각재, 합판, 자작합판, OSB, 방부목, 석고보드 이번 주 가격. 재단·배송 가능.">
+<meta property="og:title" content="이번 주 목재 시세 — 영진종합목재">
+<meta property="og:description" content="구조목·합판·각재·OSB 이번 주 가격 · 재단·배송 가능">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f6f4ef;--card:#fff;--ink:#24211c;--muted:#7a7266;--line:#e4dfd5;--wood:#8a5a2b;--wood2:#b07a43;--woodbg:#f3e9dc;--up:#b4372c;--down:#1f6fb4}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Noto Sans KR",system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:16px}
+header{background:var(--wood);color:#fff;padding:22px 18px 20px}
+header .shop{font-size:14px;opacity:.85}
+header h1{margin:4px 0 6px;font-size:26px;font-weight:900;letter-spacing:-.5px}
+header .date{display:inline-block;background:rgba(255,255,255,.16);border-radius:99px;padding:4px 12px;font-size:13px}
+main{max-width:640px;margin:0 auto;padding:14px}
+.notes{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.notes span{background:var(--woodbg);color:var(--wood);border-radius:99px;padding:6px 12px;font-size:13px;font-weight:500}
+.grp{background:var(--card);border:1px solid var(--line);border-radius:14px;margin-bottom:12px;overflow:hidden}
+.grp h2{margin:0;font-size:14px;color:var(--muted);font-weight:500;padding:10px 14px;background:#faf8f4;border-bottom:1px solid var(--line)}
+.it{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line)}
+.it:last-child{border-bottom:0}
+.it .nm{flex:1;min-width:0}
+.it .nm b{display:block;font-weight:700}
+.it .nm small{color:var(--muted);font-size:13px}
+.it .pr{text-align:right;white-space:nowrap}
+.it .pr b{font-size:19px;font-weight:900}
+.it .pr small{display:block;color:var(--muted);font-size:12px}
+.chg{font-size:12px;font-weight:700;margin-left:4px}
+.chg.up{color:var(--up)}.chg.down{color:var(--down)}
+.cta{display:flex;gap:8px;margin:16px 0}
+.cta a{flex:1;text-align:center;text-decoration:none;font-weight:700;padding:14px;border-radius:12px;background:var(--wood);color:#fff}
+.cta a.kakao{background:#fee500;color:#191600}
+.fine{color:var(--muted);font-size:12px;line-height:1.6;margin:12px 2px}
+details{margin-top:22px;background:#fff;border:1px dashed var(--line);border-radius:12px;padding:10px 14px;font-size:14px}
+details summary{cursor:pointer;color:var(--muted)}
+details .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+details button{font:inherit;padding:10px 14px;border-radius:10px;border:1px solid var(--line);background:#faf8f4;cursor:pointer}
+textarea{width:100%;height:150px;margin-top:10px;font:inherit;font-size:13px;border:1px solid var(--line);border-radius:8px;padding:8px}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#222;color:#fff;padding:10px 16px;border-radius:10px;font-size:14px;opacity:0;transition:.25s;pointer-events:none}
+.toast.show{opacity:1}
+#err{color:var(--up)}
+</style>
+</head>
+<body>
+<header>
+  <div class="shop" id="shopName">영진종합목재</div>
+  <h1>이번 주 목재 시세</h1>
+  <span class="date" id="date">불러오는 중…</span>
+</header>
+<main>
+  <div class="notes" id="notes"></div>
+  <div id="list"></div>
+  <div class="cta" id="cta"></div>
+  <p class="fine">가격은 VAT 포함 · 매장 판매가 기준입니다. 재고·수량·배송 거리에 따라 달라질 수 있으니 주문 전 확인해 주세요. 원산지·등급별 가격은 문의 주시면 안내해 드립니다.</p>
+  <p id="err"></p>
+
+  <details>
+    <summary>사장님용 · 시세표 이미지 / 소식 문구</summary>
+    <div class="row">
+      <button id="btnImg">시세표 이미지 저장 (PNG)</button>
+      <button id="btnTxt">소식 문구 복사</button>
+    </div>
+    <textarea id="txt" readonly></textarea>
+  </details>
+</main>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const won=n=>Math.round(n).toLocaleString("ko-KR");
+function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove("show"),2200);}
+const isVatEx=(x,shop)=>/VAT별도/.test(x.m||"");
+
+let D,S,rows=[];
+
+// 날짜별 품목 최저가 (VAT별도 가격은 +10%)
+function minsByDate(){
+  const last={};
+  for(const x of D.prices){const k=x.s+"|"+x.p+"|"+x.d,c=last[k]; if(!c||(x.t||0)>(c.t||0)) last[k]=x;}
+  const out={};
+  for(const k in last){const x=last[k], v=isVatEx(x)?x.v*1.1:x.v; out[x.d]=out[x.d]||{}; const m=out[x.d]; if(m[x.p]==null||v<m[x.p]) m[x.p]=v;}
+  return out;
+}
+const myPrice=(pid,min)=>{
+  if(S.fixed&&S.fixed[pid]!=null) return S.fixed[pid];
+  if(min==null) return null;
+  const r=S.round||100; return Math.ceil(min*(1+(S.markup||0)/100)/r)*r;
+};
+const fmtDate=d=>{const [y,m,dd]=d.split("-").map(Number);const w="일월화수목금토"[new Date(y,m-1,dd).getDay()];return `${y}년 ${m}월 ${dd}일 (${w}) 기준`;};
+
+function build(){
+  const by=minsByDate(), dates=Object.keys(by).sort();
+  const cur=dates[dates.length-1], prev=dates.length>1?dates[dates.length-2]:null;
+  // 품목별 최신 최저가 (해당 날짜에 없으면 그 이전 최신값)
+  const latestMin=(pid,upto)=>{for(let i=dates.length-1;i>=0;i--){if(upto&&dates[i]>upto)continue;const v=by[dates[i]][pid];if(v!=null)return v;}return null;};
+  rows=S.items.map(pid=>{
+    const p=D.products.find(x=>x.id===pid); if(!p) return null;
+    const v=myPrice(pid,latestMin(pid));
+    const pv=prev?myPrice(pid,latestMin(pid,prev)):null;
+    return v==null?null:{p,v,diff:pv!=null?v-pv:0};
+  }).filter(Boolean);
+  return D.updated||cur;
+}
+
+function render(){
+  const upd=build();
+  $("#shopName").textContent=S.name+(S.area?" · "+S.area:"");
+  $("#date").textContent=fmtDate(upd);
+  $("#notes").innerHTML=(S.notes||[]).map(n=>`<span>${esc(n)}</span>`).join("");
+  const groups=[]; for(const r of rows){let g=groups.find(g=>g.c===r.p.cat); if(!g) groups.push(g={c:r.p.cat,a:[]}); g.a.push(r);}
+  $("#list").innerHTML=groups.map(g=>`<section class="grp"><h2>${esc(g.c)}</h2>${g.a.map(r=>{
+    const chg=r.diff?`<span class="chg ${r.diff>0?"up":"down"}">${r.diff>0?"▲":"▼"}${won(Math.abs(r.diff))}</span>`:"";
+    return `<div class="it"><div class="nm"><b>${esc(r.p.name)}</b><small>${esc(r.p.spec||"")}</small></div><div class="pr"><b>${won(r.v)}</b>원${chg}<small>1${esc(r.p.unit||"개")}</small></div></div>`;}).join("")}</section>`).join("");
+  let cta="";
+  if(S.phone) cta+=`<a href="tel:${esc(S.phone.replace(/[^0-9+]/g,""))}">📞 전화 주문·문의</a>`;
+  if(S.kakao) cta+=`<a class="kakao" href="${esc(S.kakao)}" target="_blank" rel="noopener">💬 카톡 견적</a>`;
+  $("#cta").innerHTML=cta;
+  $("#txt").value=postText(upd);
+}
+
+function postText(upd){
+  const [y,m,d]=upd.split("-").map(Number);
+  let t=`[${S.name}] ${m}월 ${d}일 이번 주 목재 시세\n\n`;
+  for(const r of rows) t+=`· ${r.p.name} ${r.p.spec||""} — ${won(r.v)}원/${r.p.unit||"개"}${r.diff?(r.diff>0?" ▲":" ▼")+won(Math.abs(r.diff)):""}\n`;
+  t+=`\n${(S.notes||[]).map(n=>"✔ "+n).join("\n")}\n`;
+  if(S.phone) t+=`\n📞 ${S.phone}`;
+  t+=`\n전체 시세: ${location.href.split("#")[0]}\n※ VAT 포함, 재고·수량에 따라 변동`;
+  return t;
+}
+
+async function saveImg(){
+  try{await document.fonts.load('900 40px "Noto Sans KR"');await document.fonts.load('500 30px "Noto Sans KR"');}catch(e){}
+  const W=1080, rowH=Math.min(84,Math.floor(900/Math.max(rows.length,1))), H=1350;
+  const c=document.createElement("canvas"); c.width=W;c.height=H; const g=c.getContext("2d");
+  const F=(w,s)=>`${w} ${s}px "Noto Sans KR", sans-serif`;
+  g.fillStyle="#f6f4ef";g.fillRect(0,0,W,H);
+  g.fillStyle="#8a5a2b";g.fillRect(0,0,W,250);
+  g.fillStyle="rgba(255,255,255,.85)";g.font=F(500,34);g.fillText(S.name+(S.area?" · "+S.area:""),70,85);
+  g.fillStyle="#fff";g.font=F(900,78);g.fillText("이번 주 목재 시세",70,175);
+  g.font=F(500,30);g.fillStyle="rgba(255,255,255,.85)";g.fillText($("#date").textContent,70,225);
+  let y=300; g.fillStyle="#fff";g.beginPath();g.roundRect(50,y-10,W-100,rows.length*rowH+20,24);g.fill();
+  rows.forEach((r,i)=>{
+    const cy=y+i*rowH+rowH/2;
+    if(i) {g.fillStyle="#e4dfd5";g.fillRect(80,y+i*rowH,W-160,2);}
+    g.textBaseline="middle";g.textAlign="left";
+    g.fillStyle="#24211c";g.font=F(700,Math.round(rowH*.38));g.fillText(r.p.name,85,cy-rowH*.12);
+    g.fillStyle="#7a7266";g.font=F(400,Math.round(rowH*.26));g.fillText(r.p.spec||"",85,cy+rowH*.24);
+    g.textAlign="right";g.fillStyle="#24211c";g.font=F(900,Math.round(rowH*.44));
+    const unit=`원/${r.p.unit||"개"}`; g.font=F(500,Math.round(rowH*.26)); const uw=g.measureText(unit).width;
+    g.fillStyle="#7a7266";g.fillText(unit,W-85,cy+2);
+    g.fillStyle="#24211c";g.font=F(900,Math.round(rowH*.44));g.fillText(won(r.v),W-95-uw,cy);
+  });
+  g.textAlign="left";g.textBaseline="alphabetic";
+  const by=y+rows.length*rowH+70;
+  g.fillStyle="#8a5a2b";g.font=F(700,32);g.fillText((S.notes||[]).join("  ·  "),70,Math.min(by,H-110));
+  g.fillStyle="#7a7266";g.font=F(400,24);g.fillText("VAT 포함 · 재고·수량·배송 거리에 따라 달라질 수 있습니다"+(S.phone?"   📞 "+S.phone:""),70,H-55);
+  const a=document.createElement("a"); a.download=`영진목재_시세_${(D.updated||"").replace(/-/g,"")}.png`; a.href=c.toDataURL("image/png"); a.click();
+  toast("이미지를 저장했습니다");
+}
+
+$("#btnImg").addEventListener("click",saveImg);
+$("#btnTxt").addEventListener("click",async()=>{const t=$("#txt");try{await navigator.clipboard.writeText(t.value);toast("문구를 복사했습니다");}catch(e){t.select();document.execCommand("copy");toast("문구를 복사했습니다");}});
+
+Promise.all([fetch("data.json",{cache:"no-store"}).then(r=>r.json()),fetch("shop.json",{cache:"no-store"}).then(r=>r.json())])
+  .then(([d,s])=>{D=d;S=s;render();})
+  .catch(e=>{$("#err").textContent="시세를 불러오지 못했습니다. 잠시 후 다시 열어 주세요.";$("#date").textContent="";});
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>목재 온라인 단가 비교 — 영진종합목재</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{--bg:#f6f4ef;--card:#fff;--ink:#24211c;--muted:#7a7266;--line:#e4dfd5;--wood:#8a5a2b;--wood2:#b07a43;--woodbg:#f3e9dc;--good:#1f7a4d;--goodbg:#e3f3ea;--bad:#b4372c}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Noto Sans KR",system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:15px}
+header{background:var(--wood);color:#fff;padding:14px 16px 0}
+header h1{margin:0;font-size:18px;font-weight:700}
+header .sub{font-size:12px;opacity:.85;margin-top:2px}
+nav{display:flex;gap:2px;overflow-x:auto;margin-top:12px;scrollbar-width:none}
+nav button{flex:0 0 auto;background:transparent;border:0;color:#fff;opacity:.75;padding:10px 12px;font:inherit;font-size:14px;cursor:pointer;border-bottom:3px solid transparent}
+nav button.on{opacity:1;border-bottom-color:#ffd9a8;font-weight:700}
+main{max-width:1200px;margin:0 auto;padding:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.grow{flex:1}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}
+input,select{font:inherit;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink);min-width:0}
+input:focus,select:focus{outline:2px solid var(--wood2);border-color:var(--wood2)}
+button.b{font:inherit;padding:9px 14px;border-radius:8px;border:1px solid var(--line);background:#fff;cursor:pointer}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{padding:6px 10px;border-radius:99px;border:1px solid var(--line);background:#fff;cursor:pointer;font-size:13px}
+.chip.on{background:var(--wood);border-color:var(--wood);color:#fff}
+.muted{color:var(--muted);font-size:13px}
+.tbl-wrap{overflow:auto;border:1px solid var(--line);border-radius:10px;background:#fff;max-height:72vh}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th{background:#faf8f4;font-weight:500;color:var(--muted);font-size:12px;position:sticky;top:0;z-index:1}
+th:first-child,td:first-child{text-align:left;position:sticky;left:0;z-index:2}
+td:first-child{background:#fff}
+th:first-child{z-index:3;background:#faf8f4}
+td .sm{display:block;font-size:11px;color:var(--muted);font-weight:400}
+td.low{background:var(--goodbg);color:var(--good);font-weight:700}
+td.est{background:var(--woodbg);font-weight:700}
+.pname{font-weight:500}.pspec{font-size:12px;color:var(--muted)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:12px}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px}
+.kpi .v{font-size:22px;font-weight:700}.kpi .l{font-size:12px;color:var(--muted)}
+.list-item{display:flex;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line)}
+.list-item:last-child{border-bottom:0}
+.hidden{display:none!important}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#222;color:#fff;padding:10px 16px;border-radius:10px;font-size:14px;opacity:0;transition:.25s;pointer-events:none;z-index:50}
+.toast.show{opacity:1}
+a{color:var(--wood)}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
+@media (max-width:600px){th,td{padding:7px 8px}}
+</style>
+</head>
+<body>
+<header>
+  <h1>🪵 목재 온라인 단가 비교</h1>
+  <div class="sub">영진종합목재 · 국내 온라인 목재 쇼핑몰 공개 판매가 · 오프라인 가격은 온라인 최저가 + % 로 추정 · <span id="upd"></span></div>
+  <nav id="nav">
+    <button data-v="cmp" class="on">비교표</button>
+    <button data-v="all">전체 상품</button>
+    <button data-v="trend">가격 추이</button>
+    <button data-v="shops">쇼핑몰</button>
+    <button data-v="log">전체 가격</button>
+  </nav>
+</header>
+<main>
+  <div class="card" id="loading">불러오는 중…</div>
+
+  <section id="v-cmp" class="hidden">
+    <div class="kpis" id="kpis"></div>
+    <div class="card">
+      <div class="row" style="margin-bottom:10px">
+        <label class="f">오프라인 추정 (온라인 최저가 +)<span class="row"><input type="number" id="offPct" style="width:80px" step="1" value="10"> %</span></label>
+        <label class="f grow">품목 검색<input id="q" placeholder="예: 18T, 다루끼, 자작"></label>
+      </div>
+      <div class="row">
+        <div class="chips" id="cats"></div>
+        <div class="grow"></div>
+        <label class="row muted"><input type="checkbox" id="keyOnly"> 주요 품목만</label>
+        <label class="row muted"><input type="checkbox" id="vat" checked> VAT별도 가격은 +10% 해서 비교</label>
+      </div>
+      <div class="muted" style="margin-top:8px">초록 = 쇼핑몰 중 최저가 · 오프라인 추정가 = 온라인 최저가 + 위 % (동네 목재상 예상 소매가) · 쇼핑몰 가격은 배송비 별도인 곳이 많음 · 칸에 마우스를 올리면 원산지·조건이 보입니다</div>
+    </div>
+    <div class="tbl-wrap"><table id="tbl"></table></div>
+  </section>
+
+  <section id="v-all" class="hidden">
+    <div class="card">
+      <div class="row">
+        <label class="f grow">상품 검색<input id="aq" placeholder="예: 자작 18, 2x4, 방부, 석고"></label>
+        <label class="f">쇼핑몰<select id="ashop"></select></label>
+        <label class="f">정렬<select id="asort"><option value="name">이름순</option><option value="low">가격 낮은순</option><option value="high">가격 높은순</option></select></label>
+      </div>
+      <div class="muted" style="margin-top:8px">쇼핑몰 목록 페이지에 올라온 상품을 '더보기'까지 끝까지 읽어 그대로 넣은 목록입니다(<span id="acount"></span>). 가격은 VAT 포함 기준(별도 표시가는 +10%), 전화문의·품절 제외.</div>
+    </div>
+    <div class="tbl-wrap"><table id="allTbl"></table></div>
+  </section>
+
+  <section id="v-trend" class="hidden">
+    <div class="card row">
+      <label class="f grow">품목<select id="trProd"></select></label>
+    </div>
+    <div class="card"><div style="position:relative;height:380px"><canvas id="trChart"></canvas></div>
+      <div class="muted" id="trNote" style="text-align:center;padding:10px"></div></div>
+  </section>
+
+  <section id="v-shops" class="hidden">
+    <div class="card muted">가격을 가져오는 국내 온라인 목재·건자재 쇼핑몰입니다. 매주 월요일 새 가격으로 갱신됩니다.</div>
+    <div class="card" id="shopList"></div>
+  </section>
+
+  <section id="v-log" class="hidden">
+    <div class="card row">
+      <label class="f grow">쇼핑몰<select id="logShop"></select></label>
+      <label class="f grow">분류<select id="logCat"></select></label>
+      <button class="b" id="copy">엑셀용 복사</button>
+    </div>
+    <div class="tbl-wrap"><table id="logTbl"></table></div>
+  </section>
+</main>
+<footer>가격 출처: 각 쇼핑몰 공개 판매가 (쇼핑몰 탭에 사이트 주소) · 실제 구매가는 수량·배송비·재고에 따라 다를 수 있습니다</footer>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const won=n=>(n==null||isNaN(n))?"":Math.round(n).toLocaleString("ko-KR");
+const isVatEx=x=>/VAT별도/.test(x.m||"");
+const store={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v);}catch(e){return d;}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}};
+function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove("show"),2200);}
+
+let D=null, view="cmp", cat="전체", chart=null;
+const shop=id=>D.shops.find(s=>s.id===id);
+const prod=id=>D.products.find(p=>p.id===id);
+const label=p=>p?`${p.name} ${p.spec||""}`.trim():"";
+
+function latest(adj){
+  const m={};
+  for(const x of D.prices){const k=x.s+"|"+x.p,c=m[k]; if(!c||x.d>c.d||(x.d===c.d&&(x.t||0)>(c.t||0))) m[k]=x;}
+  if(adj) for(const k in m){const x=m[k]; if(isVatEx(x)) m[k]={...x,v:Math.round(x.v*1.1),raw:x.v};}
+  return m;
+}
+
+$("#nav").addEventListener("click",e=>{const b=e.target.closest("button"); if(b) go(b.dataset.v);});
+function go(v){view=v;document.querySelectorAll("#nav button").forEach(b=>b.classList.toggle("on",b.dataset.v===v));
+  document.querySelectorAll("main>section").forEach(s=>s.classList.toggle("hidden",s.id!=="v-"+v)); render();}
+
+function renderCmp(){
+  const L=latest($("#vat").checked), pct=Number($("#offPct").value)||0;
+  const cats=["전체",...new Set(D.products.map(p=>p.cat||"기타"))];
+  $("#cats").innerHTML=cats.map(c=>`<span class="chip ${c===cat?"on":""}" data-c="${esc(c)}">${esc(c)}</span>`).join("");
+  const q=$("#q").value.trim();
+  let prods=D.products.filter(p=>(cat==="전체"||p.cat===cat)&&(!$("#keyOnly").checked||p.key)&&(!q||(p.name+" "+p.spec+" "+p.cat).includes(q)));
+  prods=prods.filter(p=>D.shops.some(s=>L[s.id+"|"+p.id]));
+  const shops=D.shops.filter(s=>prods.some(p=>L[s.id+"|"+p.id]));
+  const priced=D.products.filter(p=>D.shops.some(s=>L[s.id+"|"+p.id])).length;
+  $("#kpis").innerHTML=`<div class="kpi"><div class="v">${D.shops.length}</div><div class="l">비교 쇼핑몰</div></div>
+    <div class="kpi"><div class="v">${priced}</div><div class="l">가격 있는 품목</div></div>
+    <div class="kpi"><div class="v">${D.prices.length}</div><div class="l">가격 기록</div></div>
+    <div class="kpi"><div class="v">${esc(D.updated)}</div><div class="l">마지막 갱신</div></div>`;
+  let h=`<thead><tr><th>품목</th><th>온라인 최저가</th><th>오프라인 추정가<br>+${pct}%</th><th>쇼핑몰 수</th>${shops.map(s=>`<th>${esc(s.name)}</th>`).join("")}</tr></thead><tbody>`;
+  for(const p of prods){
+    const cells=shops.map(s=>L[s.id+"|"+p.id]); const vals=cells.filter(Boolean).map(x=>x.v);
+    const min=Math.min(...vals), minS=shops[cells.findIndex(x=>x&&x.v===min)];
+    const est=Math.round(min*(1+pct/100)/10)*10;
+    h+=`<tr><td><div class="pname">${p.key?"⭐ ":""}${esc(p.name)}</div><div class="pspec">${esc(p.spec)}${p.unit?" · "+esc(p.unit)+"당":""}</div></td>
+      <td><b>${won(min)}</b><span class="sm">${esc(minS.name)}</span></td>
+      <td class="est">${won(est)}</td><td>${vals.length}</td>
+      ${cells.map(x=>x?`<td class="${x.v===min&&vals.length>1?"low":""}" title="${esc(x.m||"")}${x.raw?" (표시가 "+won(x.raw)+")":""}">${won(x.v)}${x.raw?'<span class="sm">VAT환산</span>':""}</td>`:`<td class="muted">-</td>`).join("")}</tr>`;
+  }
+  if(!prods.length) h+=`<tr><td colspan="4" class="muted" style="padding:18px">조건에 맞는 품목이 없습니다.</td></tr>`;
+  $("#tbl").innerHTML=h+"</tbody>";
+}
+$("#cats").addEventListener("click",e=>{const c=e.target.closest(".chip"); if(c){cat=c.dataset.c; renderCmp();}});
+["#q","#offPct"].forEach(s=>$(s).addEventListener("input",()=>{ if(s==="#offPct") store.set("offPct",$("#offPct").value); renderCmp(); }));
+["#keyOnly","#vat"].forEach(s=>$(s).addEventListener("change",renderCmp));
+
+function renderAll(){
+  const C=D.catalog||[]; const fs=$("#ashop").value;
+  const shopsIn=[...new Set(C.map(c=>c.s))];
+  $("#ashop").innerHTML=`<option value="">전체</option>`+shopsIn.map(id=>`<option value="${id}" ${id===fs?"selected":""}>${esc((shop(id)||{}).name)}</option>`).join("");
+  const words=$("#aq").value.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  let rows=C.filter(c=>(!fs||c.s===fs)&&words.every(w=>(c.n+" "+c.sp).toLowerCase().includes(w))).map(c=>({...c,inc:c.vat?Math.round(c.v*1.1):c.v}));
+  const so=$("#asort").value; rows.sort(so==="low"?(a,b)=>a.inc-b.inc:so==="high"?(a,b)=>b.inc-a.inc:(a,b)=>a.n.localeCompare(b.n,"ko")||a.inc-b.inc);
+  $("#acount").textContent=`${shopsIn.length}개 쇼핑몰 ${C.length}개 상품, 지금 ${rows.length}개 표시`;
+  $("#allTbl").innerHTML=`<thead><tr><th>상품</th><th style="text-align:left">규격</th><th>가격(VAT포함)</th><th>표시가</th><th style="text-align:left">쇼핑몰</th></tr></thead><tbody>`+
+    rows.slice(0,600).map(c=>`<tr><td style="white-space:normal;min-width:180px">${esc(c.n)}</td><td style="text-align:left" class="muted">${esc(c.sp)}</td><td><b>${won(c.inc)}</b></td><td class="muted">${won(c.v)}${c.vat?" 별도":""}</td><td style="text-align:left">${esc((shop(c.s)||{}).name)}</td></tr>`).join("")+
+    (rows.length?"":`<tr><td colspan="5" class="muted" style="padding:18px">검색 결과가 없습니다.</td></tr>`)+"</tbody>";
+}
+["#aq"].forEach(s=>$(s).addEventListener("input",renderAll)); ["#ashop","#asort"].forEach(s=>$(s).addEventListener("change",renderAll));
+
+const PAL=["#8a5a2b","#2c5aa0","#2d7a45","#b4372c","#7a3a90","#c47f00","#1d8a8a","#5a5a5a","#d0628a","#6b8e23"];
+function renderTrend(){
+  const sel=$("#trProd").value;
+  const withData=D.products.filter(p=>D.prices.some(x=>x.p===p.id));
+  $("#trProd").innerHTML=withData.map(p=>`<option value="${p.id}">${p.key?"⭐ ":""}${esc(label(p))}</option>`).join("");
+  if(sel) $("#trProd").value=sel;
+  const pid=$("#trProd").value, rows=D.prices.filter(x=>x.p===pid);
+  const dates=[...new Set(rows.map(x=>x.d))].sort();
+  const by={}; rows.forEach(x=>{(by[x.s] ||= {}); const c=by[x.s][x.d]; if(!c||(x.t||0)>(c.t||0)) by[x.s][x.d]=x;});
+  const ds=Object.keys(by).map((sid,i)=>({label:(shop(sid)||{}).name||sid,data:dates.map(d=>by[sid][d]?(isVatEx(by[sid][d])?Math.round(by[sid][d].v*1.1):by[sid][d].v):null),borderColor:PAL[i%PAL.length],backgroundColor:PAL[i%PAL.length],spanGaps:true,tension:.15,pointRadius:4}));
+  $("#trNote").textContent = dates.length<2 ? "아직 수집한 날짜가 하루뿐이라 점만 보입니다. 매주 월요일 갱신되면 선이 이어집니다. (VAT별도 가격은 +10% 환산)" : "VAT별도 가격은 +10% 환산";
+  if(typeof Chart==="undefined") return;
+  if(chart) chart.destroy();
+  chart=new Chart($("#trChart"),{type:"line",data:{labels:dates.map(d=>d.slice(5).replace("-","/")),datasets:ds},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:"index",intersect:false},
+      plugins:{legend:{position:"bottom",labels:{boxWidth:12}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${won(c.parsed.y)}원`}}},
+      scales:{y:{ticks:{callback:v=>won(v)}}}}});
+}
+$("#trProd").addEventListener("change",renderTrend);
+
+function renderShops(){
+  const L=latest(false);
+  $("#shopList").innerHTML=D.shops.map(s=>{const n=Object.values(L).filter(x=>x.s===s.id).length;
+    const url=/^[a-z0-9.\-]+\.[a-z]{2,}$/i.test(s.url||"")?"https://"+s.url:"";
+    return `<div class="list-item"><div class="grow"><b>${esc(s.name)}</b><div class="muted">${url?`<a href="${esc(url)}" target="_blank" rel="noopener">${esc(s.url)}</a>`:esc(s.url||"")}${s.memo?" · "+esc(s.memo):""}</div></div><div class="muted">${n}개 품목</div></div>`;}).join("");
+}
+
+function logRows(){const fs=$("#logShop").value, fc=$("#logCat").value;
+  return D.prices.filter(x=>(!fs||x.s===fs)&&(!fc||(prod(x.p)||{}).cat===fc)).sort((a,b)=>b.d.localeCompare(a.d)||String((prod(a.p)||{}).name).localeCompare(String((prod(b.p)||{}).name),"ko"));}
+function renderLog(){
+  const fs=$("#logShop").value, fc=$("#logCat").value;
+  $("#logShop").innerHTML=`<option value="">전체</option>`+D.shops.map(s=>`<option value="${s.id}" ${s.id===fs?"selected":""}>${esc(s.name)}</option>`).join("");
+  $("#logCat").innerHTML=`<option value="">전체</option>`+[...new Set(D.products.map(p=>p.cat))].map(c=>`<option ${c===fc?"selected":""}>${esc(c)}</option>`).join("");
+  $("#logTbl").innerHTML=`<thead><tr><th>날짜</th><th style="text-align:left">쇼핑몰</th><th style="text-align:left">품목</th><th>표시가</th><th style="text-align:left">조건</th></tr></thead><tbody>`+
+    logRows().map(x=>`<tr><td>${esc(x.d)}</td><td style="text-align:left">${esc((shop(x.s)||{}).name)}</td><td style="text-align:left">${esc(label(prod(x.p)))}</td><td><b>${won(x.v)}</b></td><td style="text-align:left" class="muted">${esc(x.m||"")}</td></tr>`).join("")+"</tbody>";
+}
+$("#logShop").addEventListener("change",renderLog); $("#logCat").addEventListener("change",renderLog);
+$("#copy").addEventListener("click",async()=>{
+  const lines=[["날짜","쇼핑몰","분류","품목","규격","단위","표시가","조건"].join("\t")].concat(logRows().map(x=>{const p=prod(x.p)||{};return [x.d,(shop(x.s)||{}).name,p.cat,p.name,p.spec,p.unit,x.v,x.m||""].join("\t");}));
+  try{await navigator.clipboard.writeText(lines.join("\n")); toast("복사했습니다. 엑셀에 붙여넣으세요.");}catch(e){toast("복사가 막혔습니다.");}
+});
+
+function render(){ if(!D) return; ({cmp:renderCmp,all:renderAll,trend:renderTrend,shops:renderShops,log:renderLog})[view](); }
+
+$("#offPct").value=store.get("offPct",10);
+fetch("data.json",{cache:"no-store"}).then(r=>{if(!r.ok) throw 0; return r.json();}).then(d=>{
+  D=d; $("#upd").textContent="마지막 갱신 "+(d.updated||""); $("#loading").classList.add("hidden"); go("cmp");
+}).catch(()=>{ $("#loading").textContent="가격 데이터를 불러오지 못했습니다. 새로고침해 보세요."; });
+})();
+</script>
+</body>
+</html>

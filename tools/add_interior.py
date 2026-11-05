@@ -2,7 +2,7 @@ import json,re
 PATH='/home/claude/price-tracker/data.json'
 D=json.load(open(PATH))
 FILES={'int/ssakda.txt':('o07',False),'int/kcc.txt':('o12',False),'int/ace_all.txt':('o02',True),
-       'int/bds_all.txt':('o16',False),'int/buildhousing_all.txt':('o10',False),'int/daelim_all.txt':('o01',False)}
+       'int/bds_all.txt':('o16',False),'int/buildhousing_all.txt':('o10',False),'int/daelim_all.txt':('o01',False),'int/diwood_all.txt':('o15',False),'int/hswooda_all.txt':('o08',False),'int/limwood_all.txt':('o09',True),'int/woodnhome_all.txt':('o03',True),'int/baro09_all.txt':('o11',True),'int/hanaro_all.txt':('o21',False),'int/namumok_all.txt':('o18',True)}
 have={(c['s'],c['n'],c['v']) for c in D['catalog']}
 added=0
 for f,(sid,vat) in FILES.items():
@@ -29,6 +29,12 @@ F=[
 ('아이소핑크','단열재','장','50T 900x1800',r'아이소핑크',r'(^|\D)50T',r'^$'),
 ('글라스울 24K 50T','단열재','포장','450x1000',r'글라스울|그라스울',r'24K',r'48K|에코배트'),
 ('석고본드','내장재','포대','25kg',r'석고본드',r'25\s*(kg|KG)',r'^$'),
+('아이소핑크','단열재','장','100T 900x1800',r'아이소핑크',r'(^|\D)100T',r'^$'),
+('C-스터드 65형','경량철골','M','',r'스터드',r'65형',r'CH|BS|J-|센서|런너'),
+('C-스터드 75형','경량철골','M','',r'스터드',r'75형',r'CH|BS|J-|센서|런너'),
+('C-런너 65형','경량철골','M','',r'런너',r'65형',r'CH|BS|J-|스터드'),
+('타카핀 F30','부자재','통','',r'타카',r'F30',r'스텐|SUS|스테인'),
+('타카핀 422J','부자재','통','',r'타카',r'422',r'스텐|SUS'),
 ]
 nid=max(int(p['id'][1:]) for p in D['products']); maxt=max(x['t'] for x in D['prices'])
 for name,cat,unit,spec,inc,key,exc in F:
@@ -37,6 +43,8 @@ for name,cat,unit,spec,inc,key,exc in F:
         t=c['n']+' '+(c['sp'] or '')
         if re.search(inc,t) and re.search(key,t) and not re.search(exc,t):
             if c['s'] not in best or c['v']<best[c['s']]['v']: best[c['s']]=c
+    vs=sorted(c['v'] for c in best.values()); med=vs[len(vs)//2]
+    best={k:c for k,c in best.items() if med/2.2<=c['v']<=med*2.2}
     if len(best)<2: print('skip',name,spec,len(best)); continue
     nid+=1; pid='p%02d'%nid
     D['products'].append(dict(id=pid,name=name,spec=spec,unit=unit,cat=cat,key=False))

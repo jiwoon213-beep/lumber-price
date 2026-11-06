@@ -1,5 +1,5 @@
 {
-  "_설명": "손님용 시세 페이지(sise.html) 설정. 가격은 온라인 최저가 + markup% 로 자동 계산되고, fixed 에 적은 품목은 그 가격으로 고정됩니다.",
+  "_설명": "손님용 시세 페이지 설정. items=매일 고정으로 보이는 주력 품목, today=build_sise.py가 매일 자동으로 바꾸는 '오늘의 품목'(today_count개). 가격은 온라인 최저가 + markup%, fixed 품목은 고정가.",
   "name": "월드건축자재",
   "area": "대전 유성구 원내동",
   "phone": "",
@@ -9,15 +9,10 @@
   "items": [
     "p01",
     "p02",
-    "p04",
     "p16",
-    "p18",
     "p06",
-    "p07",
-    "p36",
     "p38",
     "p10",
-    "p12",
     "p59"
   ],
   "fixed": {},
@@ -26,5 +21,18 @@
     "대전·세종 배송 가능",
     "수량이 많으면 따로 견적 드립니다"
   ],
-  "home": "https://www.wwood.kr/home/mall/"
+  "home": "https://www.wwood.kr/home/mall/",
+  "today": [
+    "p193",
+    "p165",
+    "p186",
+    "p18",
+    "p132",
+    "p206",
+    "p66",
+    "p95"
+  ],
+  "today_count": 8,
+  "today_prev": [],
+  "today_date": "2026-11-06"
 }

@@ -42,8 +42,37 @@ def my_price(pid, mn):
 
 prev = dates[-2] if len(dates) > 1 else None
 P = {p["id"]: p for p in D["products"]}
+
+# ── 오늘의 품목: 날짜가 바뀌면 자동으로 다른 품목으로 교체 ──
+import random, collections
+upd0 = D.get("updated") or dates[-1]
+if S.get("today_date") != upd0 or not S.get("today"):
+    shops_per = collections.defaultdict(set)
+    for x in last.values():
+        shops_per[x["p"]].add(x["s"])
+    prev_today = set(S.get("today") or []) | set(S.get("today_prev") or [])
+    cand = [p for p in D["products"] if len(shops_per[p["id"]]) >= 3
+            and p["id"] not in S["items"] and latest_min(p["id"]) is not None]
+    fresh = [p for p in cand if p["id"] not in prev_today] or cand
+    rnd = random.Random(upd0)
+    rnd.shuffle(fresh)
+    bycat = collections.OrderedDict()
+    for p in fresh:
+        bycat.setdefault(p["cat"], []).append(p)
+    pick = []
+    n = int(S.get("today_count", 8))
+    while len(pick) < n and any(bycat.values()):
+        for c in list(bycat):
+            if bycat[c] and len(pick) < n:
+                pick.append(bycat[c].pop(0)["id"])
+    S["today_prev"] = S.get("today") or []
+    S["today"] = pick
+    S["today_date"] = upd0
+    (ROOT / "shop.json").write_text(json.dumps(S, ensure_ascii=False, indent=2), encoding="utf-8")
+
+TODAY_G = "오늘의 품목 · 매일 바뀝니다"
 rows = []
-for pid in S["items"]:
+for pid in list(S["items"]) + [x for x in (S.get("today") or []) if x not in S["items"]]:
     p = P.get(pid)
     if not p:
         continue
@@ -51,15 +80,15 @@ for pid in S["items"]:
     if v is None:
         continue
     pv = my_price(pid, latest_min(pid, prev)) if prev else None
-    rows.append((p, v, (v - pv) if pv is not None else 0))
+    rows.append((p, v, (v - pv) if pv is not None else 0, TODAY_G if pid in (S.get("today") or []) else p["cat"]))
 
 esc = html.escape
 won = lambda n: f"{int(round(n)):,}"
 groups = []
-for p, v, df in rows:
-    g = next((g for g in groups if g[0] == p["cat"]), None)
+for p, v, df, gname in rows:
+    g = next((g for g in groups if g[0] == gname), None)
     if not g:
-        g = (p["cat"], []); groups.append(g)
+        g = (gname, []); groups.append(g)
     g[1].append((p, v, df))
 out = []
 for cat, items in groups:
@@ -75,7 +104,7 @@ upd = D.get("updated") or dates[-1]
 y, m, d = map(int, upd.split("-"))
 wd = "월화수목금토일"[datetime.date(y, m, d).weekday()]
 date_txt = f"{y}년 {m}월 {d}일 ({wd}) 기준"
-top = ", ".join(f'{p["name"]} {won(v)}원' for p, v, _ in rows[:4])
+top = ", ".join(f'{p["name"]} {won(v)}원' for p, v, _, _ in rows[:4])
 
 h = (ROOT / "sise.html").read_text(encoding="utf-8")
 h = re.sub(r'<div id="list">.*?</div><!--/list-->|<div id="list"></div>', f'<div id="list">{static}</div><!--/list-->', h, count=1, flags=re.S)

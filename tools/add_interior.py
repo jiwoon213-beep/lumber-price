@@ -1,7 +1,7 @@
 import json,re
 PATH='/home/claude/price-tracker/data.json'
 D=json.load(open(PATH))
-FILES={'int/ssakda.txt':('o07',False),'int/kcc.txt':('o12',False),'int/ace_all.txt':('o02',True),
+FILES={'int/daelim_siding.txt':('o01',False),'int/ssakda.txt':('o07',False),'int/kcc.txt':('o12',False),'int/ace_all.txt':('o02',True),
        'int/bds_all.txt':('o16',False),'int/buildhousing_all.txt':('o10',False),'int/daelim_all.txt':('o01',False),'int/diwood_all.txt':('o15',False),'int/hswooda_all.txt':('o08',False),'int/limwood_all.txt':('o09',True),'int/woodnhome_all.txt':('o03',True),'int/baro09_all.txt':('o11',True),'int/hanaro_all.txt':('o21',False),'int/namumok_all.txt':('o18',True)}
 have={(c['s'],c['n'],c['v']) for c in D['catalog']}
 added=0

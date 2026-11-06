@@ -74,7 +74,7 @@ for p in D['products']:
         if c['s'] not in best or c['v']<best[c['s']][1]['v']: best[c['s']]=(i,c)
     for sid,(i,c) in best.items():
         maxt+=1; matched_cat.add(i)
-        added.append(dict(s=sid,p=p['id'],v=c['v'],d='2026-11-05',m=(c['pre']+c['n']).strip(' ·'),t=maxt))
+        added.append(dict(s=sid,p=p['id'],v=c['v'],d=D['updated'],m=(c['pre']+c['n']).strip(' ·'),t=maxt))
 D['prices']+=added
 D['catalog']=[dict(s=c['s'],n=c['n'],sp=c['sp'],v=c['v'],vat=bool(c['pre'])) for c in cat]
 json.dump(D,open('/home/claude/price-tracker/data.json','w'),ensure_ascii=False,separators=(',',':'))

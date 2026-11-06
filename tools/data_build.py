@@ -1,4 +1,6 @@
 import json, importlib.util
+import datetime
+TODAY=(datetime.datetime.utcnow()+datetime.timedelta(hours=9)).strftime("%Y-%m-%d")
 spec=importlib.util.spec_from_file_location("b","build.py"); 
 src=open("build.py").read().split("ops_p=")[0]
 ns={}; exec(src,ns); P=ns["P"]; R=ns["R"]
@@ -26,7 +28,7 @@ products=[dict(id=i,name=n,spec=s,unit=u,cat=c,key=bool(k)) for i,n,s,u,c,k in b
 prices=[]
 t=0
 for c,p,v,m in W+R:
-    t+=1; prices.append(dict(s=c,p=p,v=v,d="2026-11-05",m=m.rstrip(" ·").strip() if m.strip()!="VAT별도 ·" else "VAT별도",t=t))
-data=dict(updated="2026-11-05",shops=[dict(id=i,name=n,url=u,memo=shopmemo.get(i,"")) for i,n,u in shops],products=products,prices=prices)
+    t+=1; prices.append(dict(s=c,p=p,v=v,d=TODAY,m=m.rstrip(" ·").strip() if m.strip()!="VAT별도 ·" else "VAT별도",t=t))
+data=dict(updated=TODAY,shops=[dict(id=i,name=n,url=u,memo=shopmemo.get(i,"")) for i,n,u in shops],products=products,prices=prices)
 json.dump(data,open("/home/claude/price-tracker/data.json","w"),ensure_ascii=False,separators=(",",":"))
 print(len(products),len(prices))

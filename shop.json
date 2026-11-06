@@ -23,6 +23,17 @@
   ],
   "home": "https://www.wwood.kr/home/mall/",
   "today": [
+    "p128",
+    "p191",
+    "p183",
+    "p220",
+    "p148",
+    "p14",
+    "p173",
+    "p169"
+  ],
+  "today_count": 8,
+  "today_prev": [
     "p193",
     "p165",
     "p186",
@@ -32,7 +43,5 @@
     "p66",
     "p95"
   ],
-  "today_count": 8,
-  "today_prev": [],
-  "today_date": "2026-11-06"
+  "today_date": "2026-11-07"
 }

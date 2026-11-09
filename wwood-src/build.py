@@ -10,6 +10,7 @@ PREFIX = sys.argv[2].rstrip("/") if len(sys.argv) > 2 else ""   # 미리보기�
 OUT = sys.argv[3] if len(sys.argv) > 3 else OUT
 PREVIEW = bool(PREFIX)
 MALL = "https://wwood.kr/home/mall/"
+DOME = "https://wwood.kr/home/sub06/menu03.php"  # 도매회원 쇼핑몰 연결 주소(사장님 지정)
 YT = "https://www.youtube.com/@월드건축자재DIY"
 TEL = "042-545-2900"
 ADDR = "대전 유성대로 44, 1층"
@@ -70,7 +71,7 @@ def page(path, title, desc, body, active="", jsonld=None):
 <main>{body}</main>
 <footer><div class="wrap">월드건축자재 · 영진종합목재 | {ADDR} | {TEL} | {HOURS}<br>
 시공: 월드아키텍쳐 | 대표 김지운 | 사업자등록번호 281-05-03197 | {LIC}<br>
-유튜브 <a href="{YT}">@월드건축자재DIY</a> · 도매회원 쇼핑몰 <a href="{MALL}">wwood.kr</a> · 표시 가격은 부가세 별도 소매 기준가이며 결제·재단은 매장에서 합니다.</div></footer>
+유튜브 <a href="{YT}">@월드건축자재DIY</a> · 도매회원 쇼핑몰 <a href="{DOME}">wwood.kr</a> · 표시 가격은 부가세 별도 소매 기준가이며 결제·재단은 매장에서 합니다.</div></footer>
 <div class="mbar"><a class="b g" href="/visit.html">매장 길찾기</a><a class="b d" href="tel:{TEL.replace('-','')}">전화</a></div>
 <script src="/assets/site.js" defer></script></body></html>"""
     if PREFIX: doc = doc.replace('href="/', f'href="{PREFIX}/').replace('src="/', f'src="{PREFIX}/')
@@ -180,7 +181,7 @@ def build():
 <div class="g4"><div class="card"><b>도매회원가</b><p class="small">로그인하면 소매 기준가보다 낮은 회원가로 표시</p></div><div class="card"><b>현장 납품</b><p class="small">대량 주문 현장 직접 배송 · 전국운임표</p></div>
 <div class="card"><b>세금계산서</b><p class="small">당월 거래분 월 1회(10일) 발행</p></div><div class="card"><b>자재 한 번에</b><p class="small">800여 품목 · 재단 가공 · 매장 상차</p></div></div>
 <h2>가입 절차</h2><ol><li>도매회원 쇼핑몰에서 회원가입</li><li>사업자등록증과 명함 업로드</li><li>두 서류 정보가 일치하면 승인 → 회원가 적용</li></ol>
-<a class="b r" href="{MALL}">도매회원 쇼핑몰(wwood.kr)로 가기</a></section>{CTA}""", "/dome.html")
+<a class="b r" href="{DOME}">도매회원 쇼핑몰(wwood.kr)로 가기</a></section>{CTA}""", "/dome.html")
 
     # 시공
     sv = "".join(vcard(v) for v in top(lambda v: v["cat"] in ("exterior", "greenhouse", "deck") and v["n"] > 3000, 12))

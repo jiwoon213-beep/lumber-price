@@ -15,21 +15,31 @@ for x in D["prices"]:
     k = (x["s"], x["p"], x["d"]); c = last.get(k)
     if not c or x.get("t", 0) > c.get("t", 0):
         last[k] = x
-by = {}
-for x in last.values():
-    v = x["v"] * 1.1 if vat_ex(x) else x["v"]
-    m = by.setdefault(x["d"], {})
-    if x["p"] not in m or v < m[x["p"]]:
-        m[x["p"]] = v
-dates = sorted(by)
+dates = sorted({x["d"] for x in D["prices"]})
 
-def latest_min(pid, upto=None):
-    for d in reversed(dates):
-        if upto and d > upto:
+def min_upto(upto):
+    import datetime as _dt
+    lim = (_dt.date.fromisoformat(upto) - _dt.timedelta(days=30)).isoformat()
+    per = {}
+    for x in last.values():
+        if x["d"] > upto or x["d"] < lim:
             continue
-        if pid in by[d]:
-            return by[d][pid]
-    return None
+        k = (x["s"], x["p"]); c = per.get(k)
+        if not c or x["d"] > c["d"]:
+            per[k] = x
+    out = {}
+    for x in per.values():
+        v = x["v"] * 1.1 if vat_ex(x) else x["v"]
+        if x["p"] not in out or v < out[x["p"]]:
+            out[x["p"]] = v
+    return out
+
+_cache = {}
+def latest_min(pid, upto=None):
+    u = upto or dates[-1]
+    if u not in _cache:
+        _cache[u] = min_upto(u)
+    return _cache[u].get(pid)
 
 def my_price(pid, mn):
     fx = (S.get("fixed") or {}).get(pid)
